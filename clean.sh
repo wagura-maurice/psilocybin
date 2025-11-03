@@ -1,0 +1,14 @@
+/usr/bin/php8.4 artisan down
+/usr/bin/php8.4 artisan cache:clear
+/usr/bin/php8.4 artisan route:clear
+/usr/bin/php8.4 artisan route:cache
+/usr/bin/php8.4 artisan config:clear
+/usr/bin/php8.4 artisan config:cache
+/usr/bin/php8.4 artisan view:clear
+/usr/bin/php8.4 artisan optimize
+/usr/bin/php8.4 artisan storage:unlink
+/usr/bin/php8.4 artisan storage:link
+/usr/bin/php8.4 artisan up
+/usr/bin/php8.4 /usr/local/bin/composer dump-autoload
+/usr/bin/php8.4 artisan migrate:fresh --seed
+npm run build
