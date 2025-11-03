@@ -37,6 +37,11 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
+    /**
+     * Attempt to authenticate the request's credentials.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
@@ -47,6 +52,22 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        // If 2FA is enabled for the user, log them out and redirect to 2FA challenge
+        $user = Auth::user();
+        if ($user->hasEnabledTwoFactorAuthentication()) {
+            Auth::logout();
+            
+            $request = $this->instance();
+            $request->session()->put([
+                'login.id' => $user->getKey(),
+                'login.remember' => $this->boolean('remember'),
+            ]);
+
+            throw ValidationException::withMessages([
+                '2fa_required' => 'Two-factor authentication is required.',
+            ])->redirectTo(route('two-factor.login'));
         }
 
         RateLimiter::clear($this->throttleKey());
