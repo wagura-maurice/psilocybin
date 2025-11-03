@@ -18,7 +18,49 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
+            'sessions' => $this->sessions($request),
         ]);
+    }
+    
+    /**
+     * Get the current sessions.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Support\Collection
+     */
+    protected function sessions(Request $request)
+    {
+        if (config('session.driver') !== 'database') {
+            return collect();
+        }
+
+        return collect(
+            \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $request->user()->getAuthIdentifier())
+                ->orderBy('last_activity', 'desc')
+                ->get()
+        )->map(function ($session) {
+            return (object) [
+                'id' => $session->id,
+                'ip_address' => $session->ip_address,
+                'is_current_device' => $session->id === session()->getId(),
+                'last_active' => \Carbon\Carbon::createFromTimestamp($session->last_activity)->diffForHumans(),
+                'user_agent' => $this->createUserAgent($session->user_agent),
+            ];
+        });
+    }
+    
+    /**
+     * Create a user agent instance from the given session user agent.
+     *
+     * @param  string  $userAgent
+     * @return \Jenssegers\Agent\Agent
+     */
+    protected function createUserAgent($userAgent)
+    {
+        return tap(new \Jenssegers\Agent\Agent, function ($agent) use ($userAgent) {
+            $agent->setUserAgent($userAgent);
+        });
     }
 
     /**
