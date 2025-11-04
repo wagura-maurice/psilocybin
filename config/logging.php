@@ -127,6 +127,22 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'sentry' => [
+            'driver' => 'monolog',
+            'level' => 'warning',
+            'handler' => \Sentry\Monolog\Handler::class,
+            'handler_with' => [
+                'level' => 'warning',
+            ],
+            'formatter' => env('LOG_STACK_FORMATTER', 'default'),
+            'formatter_with' => [
+                'format' => null,
+                'dateFormat' => null,
+                'allowInlineLineBreaks' => true,
+                'ignoreEmptyContextAndExtra' => true,
+            ],
+        ],
+
     ],
 
 ];
