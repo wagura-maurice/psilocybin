@@ -21,7 +21,7 @@
         </p>
     </header>
 
-    <div class="mt-5">
+    <div class="mt-5 max-w-xl">
         <div
             class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg"
         >

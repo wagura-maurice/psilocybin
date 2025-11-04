@@ -13,233 +13,235 @@
         </p>
     </header>
 
-    @if (auth()->user()->two_factor_secret && auth()->user()->two_factor_confirmed_at)
-        <!-- 2FA is Enabled -->
-        <div class="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <div class="flex items-center">
-                <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 class="ml-3 text-sm font-medium text-green-800 dark:text-green-200">
-                    {{ __('Two-Factor Authentication is enabled.') }}
-                </h3>
-            </div>
-            <div class="mt-2 text-sm text-green-700 dark:text-green-300">
-                <p>
-                    {{ __('Your account is protected with an extra layer of security.') }}
-                </p>
-                <div class="mt-4 flex space-x-3">
-                    <x-secondary-button x-on:click.prevent="$dispatch('open-modal', 'view-recovery-codes')">
-                        {{ __('View Recovery Codes') }}
-                    </x-secondary-button>
-                    <x-danger-button x-on:click.prevent="$dispatch('open-modal', 'confirm-disable-two-factor')">
-                        {{ __('Disable Two-Factor') }}
-                    </x-danger-button>
+    <div class="mt-6 max-w-xl">
+        @if (auth()->user()->two_factor_secret && auth()->user()->two_factor_confirmed_at)
+            <!-- 2FA is Enabled -->
+            <div class="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="ml-3 text-sm font-medium text-green-800 dark:text-green-200">
+                        {{ __('Two-Factor Authentication is enabled.') }}
+                    </h3>
+                </div>
+                <div class="mt-2 text-sm text-green-700 dark:text-green-300">
+                    <p>
+                        {{ __('Your account is protected with an extra layer of security.') }}
+                    </p>
+                    <div class="mt-4 flex space-x-3">
+                        <x-secondary-button x-on:click.prevent="$dispatch('open-modal', 'view-recovery-codes')">
+                            {{ __('View Recovery Codes') }}
+                        </x-secondary-button>
+                        <x-danger-button x-on:click.prevent="$dispatch('open-modal', 'confirm-disable-two-factor')">
+                            {{ __('Disable Two-Factor') }}
+                        </x-danger-button>
+                    </div>
                 </div>
             </div>
-        </div>
-    @elseif (session('status') === 'two-factor-authentication-enabled' || !is_null(auth()->user()->two_factor_secret))
-        <!-- 2FA Setup In Progress -->
-        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div class="flex items-center">
-                <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 class="ml-3 text-sm font-medium text-blue-800 dark:text-blue-200">
-                    {{ __('Complete Two-Factor Authentication Setup') }}
-                </h3>
-            </div>
+        @elseif (session('status') === 'two-factor-authentication-enabled' || !is_null(auth()->user()->two_factor_secret))
+            <!-- 2FA Setup In Progress -->
+            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="ml-3 text-sm font-medium text-blue-800 dark:text-blue-200">
+                        {{ __('Complete Two-Factor Authentication Setup') }}
+                    </h3>
+                </div>
 
-            <div class="mt-4">
-                <p class="text-sm text-blue-700 dark:text-blue-300">
-                    {{ __('Scan the following QR code using your phone\'s authenticator application or enter the setup key.') }}
-                </p>
+                <div class="mt-4">
+                    <p class="text-sm text-blue-700 dark:text-blue-300">
+                        {{ __('Scan the following QR code using your phone\'s authenticator application or enter the setup key.') }}
+                    </p>
 
-                <div class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <div class="flex flex-col items-center">
-                        <!-- QR Code -->
-                        <div class="mb-4 p-2 bg-white rounded">
-                            {!! $qrCode ?? auth()->user()->twoFactorQrCodeSvg() !!}
-                        </div>
-
-                        <!-- Setup Key -->
-                        <div class="w-full max-w-md">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ __('Or enter this code manually in your authenticator app:') }}
-                                </p>
-                                <button type="button" x-data="{ copied: false }"
-                                    @click="
-                                            const secret = '{{ $secret ?? decrypt(auth()->user()->two_factor_secret) }}';
-                                            
-                                            async function copyToClipboard(text) {
-                                                try {
-                                                    // Try modern clipboard API first
-                                                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                                                        await navigator.clipboard.writeText(text);
-                                                        return true;
-                                                    }
-                                                    
-                                                    // Fallback for older browsers
-                                                    const textarea = document.createElement('textarea');
-                                                    textarea.value = text;
-                                                    textarea.style.position = 'fixed';
-                                                    document.body.appendChild(textarea);
-                                                    textarea.focus();
-                                                    textarea.select();
-                                                    
-                                                    try {
-                                                        return document.execCommand('copy');
-                                                    } finally {
-                                                        document.body.removeChild(textarea);
-                                                    }
-                                                } catch (err) {
-                                                    console.error('Failed to copy:', err);
-                                                    window.Toast.fire({
-                                                        icon: 'error',
-                                                        title: '{{ __('Failed to copy to clipboard') }}'
-                                                    });
-                                                    return false;
-                                                }
-                                            }
-                                            
-                                            copyToClipboard(secret).then(success => {
-                                                if (success) {
-                                                    copied = true;
-                                                    setTimeout(() => copied = false, 2000);
-                                                } else {
-                                                    // Fallback: Show the text in an alert
-                                                    alert('Failed to copy to clipboard. Here is the code to copy manually:\n\n' + secret);
-                                                }
-                                            });
-                                        "
-                                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                                    :title="copied ? 'Copied!' : 'Copy to clipboard'">
-                                    <svg x-show="!copied" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
-                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                    </svg>
-                                    <svg x-show="copied" xmlns="http://www.w3.org/2000/svg"
-                                        class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </button>
+                    <div class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="flex flex-col items-center">
+                            <!-- QR Code -->
+                            <div class="mb-4 p-2 bg-white rounded">
+                                {!! $qrCode ?? auth()->user()->twoFactorQrCodeSvg() !!}
                             </div>
-                            <div
-                                class="bg-gray-100 dark:bg-gray-700 p-3 rounded font-mono text-center text-sm break-all">
-                                {{ $secret ?? decrypt(auth()->user()->two_factor_secret) }}
+
+                            <!-- Setup Key -->
+                            <div class="w-full max-w-md">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                                        {{ __('Or enter this code manually in your authenticator app:') }}
+                                    </p>
+                                    <button type="button" x-data="{ copied: false }"
+                                        @click="
+                                                const secret = '{{ $secret ?? decrypt(auth()->user()->two_factor_secret) }}';
+                                                
+                                                async function copyToClipboard(text) {
+                                                    try {
+                                                        // Try modern clipboard API first
+                                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                                            await navigator.clipboard.writeText(text);
+                                                            return true;
+                                                        }
+                                                        
+                                                        // Fallback for older browsers
+                                                        const textarea = document.createElement('textarea');
+                                                        textarea.value = text;
+                                                        textarea.style.position = 'fixed';
+                                                        document.body.appendChild(textarea);
+                                                        textarea.focus();
+                                                        textarea.select();
+                                                        
+                                                        try {
+                                                            return document.execCommand('copy');
+                                                        } finally {
+                                                            document.body.removeChild(textarea);
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Failed to copy:', err);
+                                                        window.Toast.fire({
+                                                            icon: 'error',
+                                                            title: '{{ __('Failed to copy to clipboard') }}'
+                                                        });
+                                                        return false;
+                                                    }
+                                                }
+                                                
+                                                copyToClipboard(secret).then(success => {
+                                                    if (success) {
+                                                        copied = true;
+                                                        setTimeout(() => copied = false, 2000);
+                                                    } else {
+                                                        // Fallback: Show the text in an alert
+                                                        alert('Failed to copy to clipboard. Here is the code to copy manually:\n\n' + secret);
+                                                    }
+                                                });
+                                            "
+                                        class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                                        :title="copied ? 'Copied!' : 'Copy to clipboard'">
+                                        <svg x-show="!copied" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                        <svg x-show="copied" xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div
+                                    class="bg-gray-100 dark:bg-gray-700 p-3 rounded font-mono text-center text-sm break-all">
+                                    {{ $secret ?? decrypt(auth()->user()->two_factor_secret) }}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-4">
-                    <form method="POST" action="{{ route('profile.two-factor.confirm') }}" x-data="{
-                        digits: ['', '', '', '', '', ''],
-                        codeInputs: [],
-                        hasError: {{ $errors->has('code') ? 'true' : 'false' }},
-                        init() {
-                            this.$nextTick(() => {
-                                this.codeInputs = Array.from(this.$el.querySelectorAll('.code-input'));
-                                this.codeInputs[0]?.focus();
-                            });
-                        },
-                        handleInput(index, event) {
-                            this.digits[index] = event.target.value.replace(/[^0-9]/g, '');
-                            if (this.digits[index] && index < 5) {
-                                this.codeInputs[index + 1]?.focus();
-                            }
-                            this.$refs.codeInput.value = this.digits.join('');
-                            if (this.digits.every(d => d !== '') && this.digits.length === 6) {
-                                this.$el.dispatchEvent(new Event('submit'));
-                            }
-                        },
-                        handleKeyDown(index, event) {
-                            if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
-                                this.codeInputs[index - 1]?.focus();
-                            }
-                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
-                                event.preventDefault();
-                                navigator.clipboard.readText().then(text => {
-                                    const numbers = text.replace(/[^0-9]/g, '').split('').slice(0, 6);
-                                    this.digits = [...numbers, ...Array(6 - numbers.length).fill('')].slice(0, 6);
-                                    this.$refs.codeInput.value = this.digits.join('');
-                                    const lastFilled = this.digits.findIndex(d => d === '') - 1;
-                                    if (lastFilled >= 0 && lastFilled < 5) {
-                                        this.codeInputs[lastFilled + 1]?.focus();
-                                    } else if (this.digits.every(d => d !== '')) {
-                                        this.$el.dispatchEvent(new Event('submit'));
-                                    }
+                    <div class="mt-4">
+                        <form method="POST" action="{{ route('profile.two-factor.confirm') }}" x-data="{
+                            digits: ['', '', '', '', '', ''],
+                            codeInputs: [],
+                            hasError: {{ $errors->has('code') ? 'true' : 'false' }},
+                            init() {
+                                this.$nextTick(() => {
+                                    this.codeInputs = Array.from(this.$el.querySelectorAll('.code-input'));
+                                    this.codeInputs[0]?.focus();
                                 });
+                            },
+                            handleInput(index, event) {
+                                this.digits[index] = event.target.value.replace(/[^0-9]/g, '');
+                                if (this.digits[index] && index < 5) {
+                                    this.codeInputs[index + 1]?.focus();
+                                }
+                                this.$refs.codeInput.value = this.digits.join('');
+                                if (this.digits.every(d => d !== '') && this.digits.length === 6) {
+                                    this.$el.dispatchEvent(new Event('submit'));
+                                }
+                            },
+                            handleKeyDown(index, event) {
+                                if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
+                                    this.codeInputs[index - 1]?.focus();
+                                }
+                                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+                                    event.preventDefault();
+                                    navigator.clipboard.readText().then(text => {
+                                        const numbers = text.replace(/[^0-9]/g, '').split('').slice(0, 6);
+                                        this.digits = [...numbers, ...Array(6 - numbers.length).fill('')].slice(0, 6);
+                                        this.$refs.codeInput.value = this.digits.join('');
+                                        const lastFilled = this.digits.findIndex(d => d === '') - 1;
+                                        if (lastFilled >= 0 && lastFilled < 5) {
+                                            this.codeInputs[lastFilled + 1]?.focus();
+                                        } else if (this.digits.every(d => d !== '')) {
+                                            this.$el.dispatchEvent(new Event('submit'));
+                                        }
+                                    });
+                                }
                             }
-                        }
-                    }">
-                        @csrf
-                        <div>
-                            <x-input-label :value="__('Verification Code')"
-                                class="text-sm font-medium text-gray-700 dark:text-gray-300" />
+                        }">
+                            @csrf
+                            <div>
+                                <x-input-label :value="__('Verification Code')"
+                                    class="text-sm font-medium text-gray-700 dark:text-gray-300" />
 
-                            <div class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                                <div class="flex justify-center gap-2 sm:gap-3 max-w-sm mx-auto">
-                                    <template x-for="(digit, index) in 6" :key="index">
-                                        <div class="flex-1 min-w-0">
-                                            <input :id="'code-' + index" x-model="digits[index]"
-                                                @input="handleInput(index, $event)"
-                                                @keydown="handleKeyDown(index, $event)" type="text"
-                                                inputmode="numeric" pattern="[0-9]*" maxlength="1"
-                                                class="w-full aspect-square text-center text-lg sm:text-xl font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all code-input"
-                                                :class="{ 'border-red-500 dark:border-red-500': hasError }"
-                                                :autofocus="index === 0"
-                                                style="-webkit-appearance: none; -moz-appearance: textfield;"
-                                                @input="hasError = false" />
-                                        </div>
-                                    </template>
+                                <div class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                                    <div class="flex justify-center gap-2 sm:gap-3 max-w-sm mx-auto">
+                                        <template x-for="(digit, index) in 6" :key="index">
+                                            <div class="flex-1 min-w-0">
+                                                <input :id="'code-' + index" x-model="digits[index]"
+                                                    @input="handleInput(index, $event)"
+                                                    @keydown="handleKeyDown(index, $event)" type="text"
+                                                    inputmode="numeric" pattern="[0-9]*" maxlength="1"
+                                                    class="w-full aspect-square text-center text-lg sm:text-xl font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all code-input"
+                                                    :class="{ 'border-red-500 dark:border-red-500': hasError }"
+                                                    :autofocus="index === 0"
+                                                    style="-webkit-appearance: none; -moz-appearance: textfield;"
+                                                    @input="hasError = false" />
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <input type="hidden" name="code" x-ref="codeInput" />
+                                    <x-input-error :messages="$errors->get('code')" class="mt-2" />
                                 </div>
-                                <input type="hidden" name="code" x-ref="codeInput" />
-                                <x-input-error :messages="$errors->get('code')" class="mt-2" />
                             </div>
-                        </div>
-                        <div class="mt-4">
-                            <x-primary-button type="submit" @click="$event.stopPropagation()">
-                                {{ __('Verify and Enable') }}
+                            <div class="mt-4">
+                                <x-primary-button type="submit" @click="$event.stopPropagation()">
+                                    {{ __('Verify and Enable') }}
+                                </x-primary-button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @else
+            <!-- 2FA is Disabled -->
+            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <h3 class="ml-3 text-sm font-medium text-blue-800 dark:text-blue-200">
+                        {{ __('Two-Factor Authentication is not enabled.') }}
+                    </h3>
+                </div>
+                <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                    <p>
+                        {{ __('When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s authenticator application.') }}
+                    </p>
+                    <div class="mt-4">
+                        <form method="POST" action="{{ route('profile.two-factor.enable') }}">
+                            @csrf
+                            <x-primary-button>
+                                {{ __('Enable Two-Factor Authentication') }}
                             </x-primary-button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    @else
-        <!-- 2FA is Disabled -->
-        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div class="flex items-center">
-                <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <h3 class="ml-3 text-sm font-medium text-blue-800 dark:text-blue-200">
-                    {{ __('Two-Factor Authentication is not enabled.') }}
-                </h3>
-            </div>
-            <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                <p>
-                    {{ __('When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s authenticator application.') }}
-                </p>
-                <div class="mt-4">
-                    <form method="POST" action="{{ route('profile.two-factor.enable') }}">
-                        @csrf
-                        <x-primary-button>
-                            {{ __('Enable Two-Factor Authentication') }}
-                        </x-primary-button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
+        @endif
+    </div>
 
     @if (session('status') === 'two-factor-authentication-disabled')
         <x-action-message type="success" message="{{ __('Two-factor authentication disabled successfully.') }}"
