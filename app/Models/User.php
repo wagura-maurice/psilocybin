@@ -46,7 +46,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
-        '_status',
         'last_login_at',
         'last_login_ip',
     ];
@@ -77,17 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'two_factor_confirmed_at' => 'datetime',
-        'last_login_at' => 'datetime',
-        '_status' => 'integer',
-    ];
-
-    /**
-     * The model's default values for attributes.
-     *
-     * @var array
-     */
-    protected $attributes = [
-        '_status' => 1, // 1 = active, 0 = inactive
+        'last_login_at' => 'datetime'
     ];
 
     /**
@@ -106,6 +95,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Team::class, 'team_user')
             ->withPivot(['role', 'created_at', 'updated_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get the user's biometric data.
+     */
+    public function biometric(): HasOne
+    {
+        return $this->hasOne(Biometric::class);
     }
 
     /**
@@ -206,7 +203,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function assignRole($role): void
     {
         if (is_string($role)) {
-            $role = Role::where('name', $role)->firstOrFail();
+            $role = Role::where('_slug', $role)->firstOrFail();
         }
 
         $this->roles()->syncWithoutDetaching([$role->id]);
@@ -218,7 +215,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function removeRole($role): void
     {
         if (is_string($role)) {
-            $role = Role::where('name', $role)->firstOrFail();
+            $role = Role::where('_slug', $role)->firstOrFail();
         }
 
         $this->roles()->detach($role->id);

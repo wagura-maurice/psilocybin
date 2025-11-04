@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Log;
 
 class Team extends Model
 {
@@ -35,16 +36,6 @@ class Team extends Model
     protected $casts = [
         'personal_team' => 'boolean',
         '_status' => 'integer',
-    ];
-
-    /**
-     * The model's default values for attributes.
-     *
-     * @var array
-     */
-    protected $attributes = [
-        'personal_team' => false,
-        '_status' => 0, // 0 = inactive, 1 = active
     ];
 
     /**
@@ -91,6 +82,56 @@ class Team extends Model
         $teamUser = $this->users()->where('user_id', $user->id)->first();
         
         return $teamUser ? $teamUser->pivot->role : null;
+    }
+
+    /**
+     * Add a user to the team with a specific role, with permission checks
+     * 
+     * @param User $user The user adding the member
+     * @param User $member The user to add
+     * @param string $role The role to assign
+     * @return bool True if successful
+     */
+    public function addMember(User $user, User $member, string $role): bool
+    {
+        $assignerRole = $this->getUserRole($user);
+        
+        // Check if assigner has permission to assign this role
+        if (!Role::canAssignRole($assignerRole, $role)) {
+            Log::warning("User {$user->id} attempted to assign role {$role} without permission");
+            return false;
+        }
+        
+        // Add or update the user's role in the team
+        $this->users()->syncWithoutDetaching([
+            $member->id => ['role' => $role]
+        ]);
+        
+        return true;
+    }
+    
+    /**
+     * Get all assignable roles for the current user in this team
+     * 
+     * @param User $user The user whose assignable roles to get
+     * @return array Array of roles with slug as key and name as value
+     */
+    public function getAssignableRoles(User $user): array
+    {
+        $userRole = $this->getUserRole($user);
+        
+        if (!$userRole) {
+            return [];
+        }
+        
+        // Get the role model to ensure we have hierarchy_level
+        $role = Role::where('_slug', $userRole)->first();
+        
+        if (!$role) {
+            return [];
+        }
+        
+        return Role::getAssignableRoles($userRole);
     }
 
     /**

@@ -5,10 +5,42 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Profile extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    // =====================================================================
+    // Constants
+    // =====================================================================
+    public const STATUS_PENDING   = 0;
+    public const STATUS_ACTIVE   = 1;
+    public const STATUS_SUSPENDED = 2;
+
+    public const SALUTATION_MR = 0;
+    public const SALUTATION_MRS = 1;
+    public const SALUTATION_MS = 2;
+    public const SALUTATION_MISS = 3;
+    public const SALUTATION_DR = 4;
+    public const SALUTATION_PROF = 5;
+    public const SALUTATION_SIR = 6;
+    public const SALUTATION_MADAM = 7;
+    public const SALUTATION_MX = 8;
+
+    public const GENDER_FEMALE = 0;
+    public const GENDER_MALE = 1;
+    public const GENDER_OTHER = 2;
+    public const GENDER_PREFER_NOT_TO_SAY = 3;
+
+    public const MARITAL_STATUS_MARRIED   = 0;
+    public const MARITAL_STATUS_SINGLE   = 1;
+    public const MARITAL_STATUS_DIVORCED = 2;
+
+    // =====================================================================
+    // Table & Fillable
+    // =====================================================================
+    protected $table = 'profiles';
 
     /**
      * The attributes that are mass assignable.
@@ -17,11 +49,12 @@ class Profile extends Model
      */
     protected $fillable = [
         'user_id',
-        '_salutation',
+        'salutation',
         'first_name',
         'middle_name',
         'last_name',
-        '_gender',
+        'gender',
+        'marital_status',
         'date_of_birth',
         'biography',
         'social_links',
@@ -39,8 +72,7 @@ class Profile extends Model
         'drivers_license_number',
         'vehicle_registration_number',
         'configuration',
-        '_status',
-        'avatar'
+        '_status'
     ];
 
     /**
@@ -53,49 +85,6 @@ class Profile extends Model
         'social_links' => 'array',
         'configuration' => 'array',
         '_status' => 'integer',
-    ];
-
-    /**
-     * The model's default values for attributes.
-     *
-     * @var array
-     */
-    protected $attributes = [
-        'configuration' => '{
-            "notifications": {
-                "email": {
-                    "marketing": false,
-                    "security": true,
-                    "updates": true,
-                    "invoices": true
-                },
-                "sms": {
-                    "security": true,
-                    "reminders": false,
-                    "marketing": false
-                },
-                "push": {
-                    "messages": true,
-                    "mentions": true,
-                    "tasks": true,
-                    "marketing": false
-                },
-                "in_app": {
-                    "all": true,
-                    "sound": true,
-                    "badge": true
-                },
-                "quiet_hours": {
-                    "enabled": false,
-                    "from": "22:00",
-                    "to": "07:00",
-                    "timezone": "Africa/Nairobi"
-                }
-            }
-        }',
-        '_timezone' => 'Africa/Nairobi',
-        '_locale' => 'en',
-        '_status' => 0,
     ];
 
     /**
