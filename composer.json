@@ -7,16 +7,24 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "africastalking/africastalking": "^3.0",
         "bacon/bacon-qr-code": "^3.0",
         "fakerphp/faker": "^1.24",
+        "giggsey/libphonenumber-for-php": "^9.0",
         "jenssegers/agent": "^2.6",
+        "justinrainbow/json-schema": "^6.6",
         "laravel/fortify": "^1.31",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.39",
         "laravel/passport": "^13.3",
         "laravel/tinker": "^2.10.1",
+        "maatwebsite/excel": "^3.1",
         "orangehill/iseed": "^3.1",
-        "pragmarx/google2fa-laravel": "^2.3"
+        "pragmarx/google2fa-laravel": "^2.3",
+        "sentry/sentry-laravel": "^4.18",
+        "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-json-api-paginate": "^1.16",
+        "spatie/laravel-query-builder": "^6.3"
     },
     "require-dev": {
         "laravel/breeze": "^2.3",
@@ -32,7 +40,12 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Utilities/Helpers.php",
+            "app/Utilities/Parser.php",
+            "app/Utilities/Core.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
