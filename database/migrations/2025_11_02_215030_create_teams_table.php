@@ -25,7 +25,7 @@ return new class extends Migration
 
             // Indexes
             $table->index('_status');
-            $table->index('slug');
+            $table->index('_slug');
         });
     }
 
