@@ -35,12 +35,7 @@ return new class extends Migration
             $table->date('date_of_birth')->nullable();
             $table->string('telephone', 20)->nullable()->unique(); // E.164: +2547...
             $table->longText('biography')->nullable();
-            $table->json('social_links')->nullable()->default(json_encode([
-                'facebook' => null,
-                'twitter' => null,
-                'instagram' => null,
-                'linkedin' => null,
-            ]));
+            $table->json('social_links')->nullable();
 
             // -----------------------------------------------------------------
             // Address
@@ -71,15 +66,7 @@ return new class extends Migration
             // -----------------------------------------------------------------
             // Configuration & Status
             // -----------------------------------------------------------------
-            $table->json('configuration')->default(json_encode([
-                "notifications" => [
-                    "email" => ["marketing" => false, "security" => true, "updates" => true, "invoices" => true],
-                    "sms" => ["security" => true, "reminders" => false, "marketing" => false],
-                    "push" => ["messages" => true, "mentions" => true, "tasks" => true, "marketing" => false],
-                    "in_app" => ["all" => true, "sound" => true, "badge" => true],
-                    "quiet_hours" => ["enabled" => false, "from" => "22:00", "to" => "07:00", "timezone" => "Africa/Nairobi"]
-                ],
-            ]));
+            $table->json('configuration')->nullable();
 
             // Status: 0 = pending, 1 = active, 2 = suspended, 3 = archived
             $table->tinyInteger('_status')->default(Profile::STATUS_PENDING);
@@ -101,7 +88,6 @@ return new class extends Migration
             $table->index('passport_number');
             $table->index('drivers_license_number');
             $table->index('vehicle_registration_number');
-            $table->index('configuration');
             $table->index('_status');
         });
     }
