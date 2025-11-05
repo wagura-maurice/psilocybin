@@ -24,14 +24,19 @@ class AbilityRoleTableSeeder extends Seeder
         }
 
         // Cache role & ability IDs for performance
-        $roles = DB::table('roles')->pluck('id', '_slug');
-        $abilities = DB::table('abilities')->pluck('id', '_slug');
+        $roles = collect(DB::table('roles')->get())->mapWithKeys(function ($role) {
+            return [$role->name => $role->id];
+        });
+        
+        $abilities = collect(DB::table('abilities')->get())->mapWithKeys(function ($ability) {
+            return [$ability->name => $ability->id];
+        });
 
         $assignments = [];
 
         // ────────────────────── SUPER ADMINISTRATOR ──────────────────────
-        $superAdmin = $roles['super_administrator'];
-        foreach ($abilities as $abilityId) {
+        $superAdmin = $roles['Super Administrator'];
+        foreach ($abilities as $abilityName => $abilityId) {
             $assignments[] = [
                 'role_id'     => $superAdmin,
                 'ability_id'  => $abilityId,
@@ -41,12 +46,12 @@ class AbilityRoleTableSeeder extends Seeder
         }
 
         // ────────────────────── GENERAL MANAGER ─────────────────────────
-        $generalManager = $roles['general_manager'];
+        $generalManager = $roles['General Manager'];
         $gmAbilities = [
-            'view_dashboard', 'view_users', 'view_reports', 'export_data',
-            'manage_reservations', 'manage_menu', 'manage_room_status',
-            'manage_events', 'process_payments', 'manage_attendance',
-            'log_maintenance', 'monitor_cctv'
+            'View Dashboard', 'View Users', 'View Reports', 'Export Data',
+            'Manage Reservations', 'Manage Menu', 'Manage Room Status',
+            'Manage Events', 'Process Payments', 'Manage Attendance',
+            'Log Maintenance', 'Monitor CCTV'
         ];
         foreach ($gmAbilities as $slug) {
             $assignments[] = [
@@ -58,187 +63,216 @@ class AbilityRoleTableSeeder extends Seeder
         }
 
         // ────────────────────── FINANCE MANAGER ─────────────────────────
-        $financeManager = $roles['finance_manager'];
+        $financeManager = $roles['Finance Manager'];
         $financeAbilities = [
-            'view_reports', 'export_data', 'process_payments', 'process_payroll'
+            'View Reports', 'Export Data', 'Process Payments', 'Process Payroll'
         ];
-        foreach ($financeAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $financeManager,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($financeAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $financeManager,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── RESTAURANT MANAGER ─────────────────────
-        $restaurantManager = $roles['restaurant_manager'];
+        $restaurantManager = $roles['Restaurant Manager'];
         $restaurantAbilities = [
-            'manage_reservations', 'take_orders', 'process_payments',
-            'manage_menu', 'view_reports'
+            'Manage Reservations', 'Take Orders', 'Process Payments',
+            'Manage Menu', 'View Reports'
         ];
-        foreach ($restaurantAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $restaurantManager,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($restaurantAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $restaurantManager,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── BAR MANAGER ────────────────────────────
-        $barManager = $roles['bar_manager'];
+        $barManager = $roles['Bar Manager'];
         $barAbilities = [
-            'serve_drinks', 'manage_bar_inventory', 'process_payments', 'view_reports'
+            'Serve Drinks', 'Manage Bar Inventory', 'Process Payments', 'View Reports'
         ];
-        foreach ($barAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $barManager,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        
+        foreach ($barAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $barManager,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── EXECUTIVE CHEF ──────────────────────────
-        $execChef = $roles['executive_chef'];
+        $executiveChef = $roles['Executive Chef'];
         $chefAbilities = [
-            'manage_menu', 'manage_recipes', 'prepare_food', 'manage_bar_inventory'
+            'Prepare Food', 'Manage Recipes', 'Manage Menu', 'View Reports'
         ];
-        foreach ($chefAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $execChef,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($chefAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $executiveChef,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── ACCOMMODATION MANAGER ───────────────────
-        $accommodationManager = $roles['accommodation_manager'];
+        $accommodationManager = $roles['Accommodation Manager'];
         $accommodationAbilities = [
-            'check_in_guests', 'check_out_guests', 'manage_room_status',
-            'manage_reservations', 'process_payments'
+            'Check In Guests', 'Check Out Guests', 'Manage Room Status',
+            'Manage Reservations', 'Process Payments'
         ];
-        foreach ($accommodationAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $accommodationManager,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($accommodationAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $accommodationManager,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── FRONT DESK AGENT ────────────────────────
-        $frontDesk = $roles['front_desk_agent'];
+        $frontDesk = $roles['Front Desk Agent'];
         $frontDeskAbilities = [
-            'check_in_guests', 'check_out_guests', 'manage_reservations'
+            'Check In Guests', 'Check Out Guests', 'Manage Reservations'
         ];
-        foreach ($frontDeskAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $frontDesk,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($frontDeskAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $frontDesk,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── SERVER / WAITER ────────────────────────
-        $server = $roles['server'];
-        $serverAbilities = ['take_orders', 'process_payments'];
-        foreach ($serverAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $server,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $server = $roles['Server'];
+        $serverAbilities = ['Take Orders', 'Process Payments'];
+        foreach ($serverAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $server,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── BARTENDER ───────────────────────────────
-        $bartender = $roles['bartender'];
-        $bartenderAbilities = ['serve_drinks'];
-        foreach ($bartenderAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $bartender,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $bartender = $roles['Bartender'];
+        $bartenderAbilities = ['Serve Drinks'];
+        foreach ($bartenderAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $bartender,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── LINE COOK ───────────────────────────────
-        $lineCook = $roles['line_cook'];
-        $cookAbilities = ['prepare_food'];
-        foreach ($cookAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $lineCook,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $lineCook = $roles['Line Cook'];
+        $cookAbilities = ['Prepare Food'];
+        foreach ($cookAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $lineCook,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── HOUSEKEEPING ───────────────────────────
-        $housekeeping = $roles['housekeeping'];
-        $housekeepingAbilities = ['manage_room_status'];
-        foreach ($housekeepingAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $housekeeping,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $housekeeping = $roles['Housekeeping'];
+        $housekeepingAbilities = ['Manage Room Status'];
+        foreach ($housekeepingAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $housekeeping,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── VALET ATTENDANT ────────────────────────
-        $valet = $roles['valet_attendant'];
-        $valetAbilities = ['park_vehicles'];
-        foreach ($valetAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $valet,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $valet = $roles['Valet Attendant'];
+        $valetAbilities = ['Park Vehicles'];
+        foreach ($valetAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $valet,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── STORE KEEPER ───────────────────────────
-        $storeKeeper = $roles['store_keeper'];
-        $storeAbilities = ['receive_stock', 'issue_stock'];
-        foreach ($storeAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $storeKeeper,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $storeKeeper = $roles['Store Keeper'];
+        $storeAbilities = ['Receive Stock', 'Issue Stock'];
+        foreach ($storeAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $storeKeeper,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── SECURITY GUARD ─────────────────────────
-        $security = $roles['security_guard'];
-        $securityAbilities = ['control_access', 'monitor_cctv'];
-        foreach ($securityAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $security,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        $security = $roles['Security Guard'];
+        $securityAbilities = ['Control Access', 'Monitor CCTV'];
+        foreach ($securityAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $security,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // ────────────────────── HR MANAGER ─────────────────────────────
-        $hrManager = $roles['hr_manager'];
+        $hrManager = $roles['HR Manager'];
         $hrAbilities = [
-            'manage_attendance', 'process_payroll', 'create_users', 'edit_users'
+            'Manage Attendance', 'Process Payroll', 'Create Users', 'Edit Users'
         ];
-        foreach ($hrAbilities as $slug) {
-            $assignments[] = [
-                'role_id'     => $hrManager,
-                'ability_id'  => $abilities[$slug],
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
+        foreach ($hrAbilities as $abilityName) {
+            if (isset($abilities[$abilityName])) {
+                $assignments[] = [
+                    'role_id'     => $hrManager,
+                    'ability_id'  => $abilities[$abilityName],
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
         }
 
         // Insert in chunks

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Team;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -22,35 +23,85 @@ class DatabaseSeeder extends Seeder
             AbilityRoleTableSeeder::class,
         ]);
 
-        // 2. Create key users and assign real roles using _slug
-        // Only create users for roles that exist in the RolesTableSeeder
-        $userRoles = [
-            'Super Administrator' => ['email' => 'superadmin@psilocybin.org', 'role' => 'super_administrator'],
-            'General Manager' => ['email' => 'gm@psilocybin.org', 'role' => 'general_manager'],
-            'Finance Manager' => ['email' => 'finance@psilocybin.org', 'role' => 'finance_manager'],
-            'Operations Manager' => ['email' => 'operations@psilocybin.org', 'role' => 'operations_manager'],
-            'Restaurant Manager' => ['email' => 'restaurant@psilocybin.org', 'role' => 'restaurant_manager'],
-            'Bar Manager' => ['email' => 'bar@psilocybin.org', 'role' => 'bar_manager'],
-            'Executive Chef' => ['email' => 'chef@psilocybin.org', 'role' => 'executive_chef'],
-            'Accommodation Manager' => ['email' => 'accommodation@psilocybin.org', 'role' => 'accommodation_manager'],
-            'HR Manager' => ['email' => 'hr@psilocybin.org', 'role' => 'hr_manager'],
-            'Security Manager' => ['email' => 'security@psilocybin.org', 'role' => 'security_manager'],
-            'Security Guard' => ['email' => 'guard@psilocybin.org', 'role' => 'security_guard'],
-            'Front Desk Agent' => ['email' => 'frontdesk@psilocybin.org', 'role' => 'front_desk_agent'],
-            'Server' => ['email' => 'server@psilocybin.org', 'role' => 'server'],
-            'Bartender' => ['email' => 'bartender@psilocybin.org', 'role' => 'bartender'],
-            'Housekeeping' => ['email' => 'housekeeping@psilocybin.org', 'role' => 'housekeeping']
-        ];
+        // 2. Get all roles from the database, ordered by hierarchy
+        $roles = \App\Models\Role::orderBy('_hierarchy_matrix_level', 'desc')->get();
 
-        foreach ($userRoles as $name => $data) {
-            $this->createUser($name, $data['email'], $data['role']);
+        // 3. Create a default user and team for each role
+        $allUsers = [];
+        $roleTeams = [];
+        
+        // First pass: Create one user for each role (these will be team owners)
+        $ownerUsers = [];
+        foreach ($roles as $role) {
+            // Create owner user for this role
+            // Sanitize role name to only allow alphanumeric, dots, and hyphens
+            $sanitizedName = preg_replace('/[^a-zA-Z0-9. -]/', '', $role->name);
+            $emailLocal = strtolower(preg_replace('/[. -]+/', '.', trim($sanitizedName)));
+            $ownerEmail = $emailLocal . '@psilocybin.org';
+            $ownerUser = $this->createUser($role->name, $ownerEmail, $role->_slug, false);
+            $allUsers[] = $ownerUser;
+            $ownerUsers[$role->id] = $ownerUser;
         }
+        
+        // Truncate teams table and reset auto-increment
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \App\Models\Team::truncate();
+        \DB::statement('ALTER TABLE teams AUTO_INCREMENT = 1;');
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        
+        // Second pass: Create teams and assign users
+        foreach ($roles as $role) {
+            $teamName = \Illuminate\Support\Str::plural($role->name);
+            
+            // Get the owner user for this role
+            $ownerUser = $ownerUsers[$role->id] ?? null;
+            if (!$ownerUser) continue;
+            
+            // Create team for this role
+            $team = \App\Models\Team::create([
+                'name' => $teamName,
+                '_slug' => \Illuminate\Support\Str::slug($teamName),
+                'description' => "Team for {$role->name} role",
+                'user_id' => $ownerUser->id,
+                'personal_team' => false,
+                '_status' => $role->_status === \App\Models\Role::ACTIVE 
+                    ? \App\Models\Team::ACTIVE 
+                    : \App\Models\Team::SUSPENDED,
+                'role_id' => $role->id,
+                '_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            ]);
+            
+            // Store the team for this role
+            $roleTeams[$role->id] = $team;
+            
+            // Assign the owner user to the team as owner
+            $team->users()->sync([$ownerUser->id => ['role' => 'owner']], false);
+            
+            // Assign the role to the owner user
+            $ownerUser->roles()->sync([$role->id], false);
+            
+            // Get all users who are not the owner of this team
+            $memberUsers = collect($allUsers)->filter(function($user) use ($ownerUser) {
+                return $user->id !== $ownerUser->id;
+            });
+            
+            // Add all other users as members of this team
+            foreach ($memberUsers as $memberUser) {
+                $team->users()->sync([$memberUser->id => ['role' => 'member']], false);
+                // Don't change the user's role, just add them to the team
+            }
+        } // End of roles foreach loop
+        
+        // 4. Run the database fixer to ensure data integrity
+        $this->call([
+            FixDatabaseSeeder::class,
+        ]);
     }
 
     /**
      * Create a user, assign a role, and create a team.
      */
-    private function createUser(string $name, string $email, string $roleSlug): User
+    private function createUser(string $name, string $email, string $roleSlug, bool $createTeam = true): User
     {
         // Create the user
         $user = User::factory()->create([
@@ -61,8 +112,8 @@ class DatabaseSeeder extends Seeder
         // Assign the role
         $user->assignRole($roleSlug);
 
-        // Create a team for the user if they don't have one
-        if ($user->ownedTeams()->count() === 0) {
+        // Create a team for the user if requested and they don't have one
+        if ($createTeam && $user->ownedTeams()->count() === 0) {
             $teamName = $name . "'s Team";
             $team = $user->ownedTeams()->create([
                 '_uuid' => (string) \Illuminate\Support\Str::uuid(),
@@ -70,19 +121,15 @@ class DatabaseSeeder extends Seeder
                 '_slug' => \Illuminate\Support\Str::slug($teamName),
                 'description' => 'Team for ' . $name,
                 'personal_team' => false,
-                '_status' => 1, // Active
+                '_status' => Team::ACTIVE
             ]);
 
-            // Attach the user to the team as admin
-            $user->teams()->attach($team->id, ['role' => 'admin']);
+            // Attach the user to the team as owner
+            $user->teams()->syncWithoutDetach([$team->id => ['role' => 'owner']]);
             
             // Set the user's current team
             $user->current_team_id = $team->id;
             $user->save();
-
-            // Grant all abilities to the team owner
-            $abilities = \App\Models\Ability::all();
-            $team->abilities()->sync($abilities->pluck('id'));
         }
 
         return $user;
