@@ -35,9 +35,9 @@ class TeamFactory extends Factory
             'description' => $this->faker->boolean(70) ? $this->faker->paragraph() : null,
             'personal_team' => false,
             '_status' => $this->faker->randomElement([
-                0, // PENDING
-                1, // ACTIVE
-                2  // SUSPENDED
+                Team::PENDING,
+                Team::ACTIVE,
+                Team::SUSPENDED
             ]),
         ];
     }
@@ -48,7 +48,7 @@ class TeamFactory extends Factory
     public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            '_status' => 1, // ACTIVE
+            '_status' => Team::ACTIVE,
         ]);
     }
 
@@ -58,7 +58,7 @@ class TeamFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            '_status' => 0, // PENDING
+            '_status' => Team::PENDING,
         ]);
     }
 
@@ -68,7 +68,7 @@ class TeamFactory extends Factory
     public function suspended(): static
     {
         return $this->state(fn (array $attributes) => [
-            '_status' => 2, // SUSPENDED
+            '_status' => Team::SUSPENDED,
         ]);
     }
 
@@ -84,28 +84,4 @@ class TeamFactory extends Factory
         ]);
     }
 
-    /**
-     * Configure the model factory.
-     */
-    public function configure(): static
-    {
-        return $this->afterCreating(function (Team $team): void {
-            $this->attachOwnerToTeam($team);
-        });
-    }
-
-    /**
-     * Attach the owner to the team.
-     */
-    protected function attachOwnerToTeam(Team $team): void
-    {
-        if (!$team->owner) {
-            return;
-        }
-
-        $team->users()->attach(
-            $team->owner->id,
-            ['role' => 'owner']
-        );
-    }
 }

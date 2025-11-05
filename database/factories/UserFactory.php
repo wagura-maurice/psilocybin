@@ -44,7 +44,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('Qwerty123!'),
             'remember_token' => Str::random(10),
         ];
     }
@@ -54,15 +54,48 @@ class UserFactory extends Factory
      */
     /**
      * Configure the model factory.
-     *
-     * @return $this
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (User $user): void {
-            $this->ensureUserHasProfile($user);
+        return $this->afterCreating(function (User $user) {
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
+
             $this->ensureUserHasTeam($user);
+            $this->ensureUserHasProfile($user);
+            $this->ensureUserHasBiometric($user);
+            $this->assignRoleToUser($user);
+            
+            // Add user to additional teams (20% chance for each user)
+            if ($this->faker->boolean(20)) {
+                $this->addUserToRandomTeams($user);
+            }
         });
+    }
+    
+    /**
+     * Add user to 1-3 random teams with random roles
+     *
+     * @param User $user
+     * @return void
+     */
+    protected function addUserToRandomTeams(User $user): void
+    {
+        $teams = Team::where('user_id', '!=', $user->id) // Don't add to own teams
+            ->inRandomOrder()
+            ->take($this->faker->numberBetween(1, 3))
+            ->get();
+            
+        $roles = ['member', 'editor', 'viewer', 'manager'];
+        
+        foreach ($teams as $team) {
+            $role = $this->faker->randomElement($roles);
+            
+            // Use the addMember method to add the user to the team
+            // We'll use the team owner as the user adding the member
+            $team->addMember($team->owner, $user, $role);
+        }
     }
 
     /**
@@ -98,7 +131,6 @@ class UserFactory extends Factory
         $user->update(['current_team_id' => $team->id]);
         
         $this->setupTeamAbilities($team);
-        $this->ensureUserHasBiometric($user);
     }
 
     /**
@@ -109,14 +141,37 @@ class UserFactory extends Factory
         // Get the user from the team
         $user = $team->owner;
         
-        // Get the default role (e.g., 'admin' or 'member')
-        $role = Role::where('_slug', 'admin')->first();
+        // Get the default role (e.g., 'administrator' or 'member')
+        $role = Role::where('_slug', 'administrator')->first();
         
         if ($role) {
             // Assign the role to the user
             $user->roles()->syncWithoutDetach([$role->id]);
             
             // If the role has abilities, they will be available through the role-ability relationship
+        }
+    }
+
+    /**
+     * Assign a role to the user
+     *
+     * @param User $user
+     * @return void
+     */
+    protected function assignRoleToUser(User $user): void
+    {
+        // If the user already has a role, don't reassign
+        if ($user->roles()->exists()) {
+            return;
+        }
+
+        // Get a random role (excluding super_administrator for security)
+        $role = Role::where('_slug', '!=', 'super_administrator')
+            ->inRandomOrder()
+            ->first();
+
+        if ($role) {
+            $user->roles()->attach($role);
         }
     }
 
