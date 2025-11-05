@@ -33,6 +33,37 @@ class Profile extends Model
     public const GENDER_OTHER = 2;
     public const GENDER_PREFER_NOT_TO_SAY = 3;
 
+    public const RACE_WHITE = 0;
+    public const RACE_BLACK = 1;
+    public const RACE_ASIAN = 2;
+    public const RACE_HISPANIC = 3;
+    public const RACE_OTHER = 4;
+    public const RACE_PREFER_NOT_TO_SAY = 5;
+
+    public const ETHNICITY_AFRICAN = 0;
+    public const ETHNICITY_ASIAN = 1;
+    public const ETHNICITY_EUROPEAN = 2;
+    public const ETHNICITY_HISPANIC = 3;
+    public const ETHNICITY_NORTH_ASIAN = 4;
+    public const ETHNICITY_SOUTH_ASIAN = 5;
+    public const ETHNICITY_AUSTRALIAN = 6;
+    public const ETHNICITY_HAWAIIAN = 7;
+    public const ETHNICITY_MIDDLE_EASTERN = 8;
+    public const ETHNICITY_NATIVE_AMERICAN = 9;
+    public const ETHNICITY_SOUTH_AMERICAN = 10;
+    public const ETHNICITY_PACIFIC_ISLANDER = 11;
+    public const ETHNICITY_CAUCASIAN = 12;
+    public const ETHNICITY_OTHER = 13;
+
+    public const RELIGION_CHRISTIAN = 0;
+    public const RELIGION_MUSLIM = 1;
+    public const RELIGION_HINDU = 2;
+    public const RELIGION_BUDHIST = 3;
+    public const RELIGION_JEWISH = 4;
+    public const RELIGION_SIKH = 5;
+    public const RELIGION_MORMON = 6;
+    public const RELIGION_OTHER = 7;
+
     public const MARITAL_STATUS_MARRIED   = 0;
     public const MARITAL_STATUS_SINGLE   = 1;
     public const MARITAL_STATUS_DIVORCED = 2;

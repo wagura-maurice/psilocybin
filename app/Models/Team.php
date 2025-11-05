@@ -3,12 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Log;
 
 class Team extends Model
 {
+    use HasFactory;
+
+    /**
+     * Team status constants
+     */
+    public const PENDING = 0;
+    public const ACTIVE = 1;
+    public const SUSPENDED = 2;
+    public const ARCHIVED = 3;
     /**
      * The attributes that are mass assignable.
      *
@@ -94,14 +104,6 @@ class Team extends Model
      */
     public function addMember(User $user, User $member, string $role): bool
     {
-        $assignerRole = $this->getUserRole($user);
-        
-        // Check if assigner has permission to assign this role
-        if (!Role::canAssignRole($assignerRole, $role)) {
-            Log::warning("User {$user->id} attempted to assign role {$role} without permission");
-            return false;
-        }
-        
         // Add or update the user's role in the team
         $this->users()->syncWithoutDetaching([
             $member->id => ['role' => $role]
